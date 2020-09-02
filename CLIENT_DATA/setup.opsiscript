@@ -1,0 +1,120 @@
+; ----------------------------------------------------------------
+; Copyright (c) uib gmbh (www.uib.de)
+; This sourcecode is owned by uib
+; and published under the Terms of the General Public License.
+; credits: http://www.opsi.org/en/credits/
+; ----------------------------------------------------------------
+
+;****************************************
+; SETUPTYPE      msi
+;****************************************
+; PRODUCTID      ica-set-wifi
+; SETUPFILE      Wi-Fi-campus_PW.xml
+;****************************************
+; LICENSE        false     
+; PRODUCTDESC    Set the default WiFi profile to connect to the ICA campus SSID.Optionally delete all other profiles.
+; PRODUCTNAME    ica-set-wifi
+; PRODUCTSIZE    20 MB
+; PRODUCTVER     1.0
+;****************************************
+; SETUPSCRIPT    setup.opsiscript
+; UNINSSCRIPT    uninstall.opsiscript
+;****************************************
+; MSIID          {none}
+; USE-MST        
+; INSTALLDIR     c:\temp
+;****************************************
+; TIMESTAMP      9/2/2020 8:10:24
+;****************************************
+
+[Actions]
+requiredWinstVersion >= "4.11.4.3"
+ScriptErrorMessages = false
+
+DefVar $SetupType$
+DefVar $ProductId$ 
+DefVar $Setupfile$ 
+DefVar $InstallDir$
+DefVar $MinimumSpace$
+DefVar $ExitCode$
+DefVar $ErrorMsg$
+DefVar $LicenseRequired$
+DefVar $LicenseKey$
+DefVar $LicensePool$
+DefVar $MsiId$
+DefVar $NsisInstallBatch$
+DefVar $LogDir$
+DefVar $Prop_delete_profiles$
+
+Set $LogDir$ = "%opsiLogDir%"
+
+include_append "%ScriptPath%\check_msi_exitcode.opsiscript"
+
+set $Prop_delete_profiles$ = GetProductProperty("delete_profiles","false")
+
+; ----------------------------------------------------------------
+Set $SetupType$       = "msi"
+; ----------------------------------------------------------------
+
+; $ProductId$ is the name of the product in opsi, only lower letters, no umlauts, no white spaces, use '-' as a seperator
+Set $ProductId$       = "ica-set-wifi"
+Set $Setupfile$       = "Wi-Fi-campus_PW.xml"
+; the path where we find the product after the installation
+Set $InstallDir$      = "c:\temp"
+Set $LicenseRequired$ = "false"
+Set $LicensePool$     = "p_" + $ProductId$
+Set $MsiId$           = "{none}"
+Set $MinimumSpace$    = "20 MB"
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+   LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+   isFatalError "No Space"
+   ; Stop process and set installation status to failed
+else
+   comment "Show product picture"
+   ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+  
+   Message "Installing " + $ProductId$ + " ..."
+   
+   comment "Start setup program"
+   ChangeDirectory "%SCRIPTPATH%"
+   ;----------------------------------------------
+   if ($Prop_delete_profiles$ = "true")
+      comment "Delete old profiles"
+      set $exitcode$ = shellCall("netsh wlan delete profile *")
+      Sub_check_exitcode
+   endif
+   ;----------------------------------------------  
+   comment "Create the scratch folder"
+   Files_install
+   comment "Create the new profile"
+   set $exitcode$ = shellCall('netsh wlan add profile filename='+$InstallDir$+'\'+$Setupfile$ )
+   Sub_check_exitcode
+   comment "Delete the scratch folder"
+   Files_uninstall
+   ExitWindows /ImmediateReboot
+endif
+
+
+; ----------------------------------------------------------------
+; install section
+; ----------------------------------------------------------------
+[Files_install]
+; Recursively copy files into the installation directory:
+;
+copy -cs "%scriptpath%\files\*.*" $InstallDir$
+
+[Files_uninstall]
+; Recursively delete the installation directory:
+;
+ del -sf "$InstallDir$\"
+
+
+
+; ----------------------------------------------------------------
+
+; ----------------------------------------------------------------
+; ----------------------------------------------------------------
+
