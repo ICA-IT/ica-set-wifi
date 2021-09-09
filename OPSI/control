@@ -8,7 +8,7 @@ id: ica-set-wifi
 name: ica-set-wifi
 description: Set the default WiFi profile to connect to the ICA campus SSID.
  Optionally delete all other profiles.
-advice: 
+advice: Don't forget to re-run ica-set-net once connected to the WiFi!
 version: 1.0
 priority: 0
 licenseRequired: False
