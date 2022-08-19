@@ -94,7 +94,7 @@ else
    Sub_check_exitcode
    comment "Delete the scratch folder"
    Files_uninstall
-   ExitWindows /ImmediateReboot
+   ExitWindows /Reboot
 endif
 
 
